@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
-import * as SQLite from "expo-sqlite";
-
-const db = SQLite.openDatabaseSync("meals.db");
 
 type FoodItem = {
   food: {
     label: string;
     nutrients: {
-      ENERC_KCAL: number;
+      ENERC_KCAL: number; // Calories
     };
   };
 };
@@ -19,27 +16,41 @@ export default function AddMealScreen() {
   const [mealName, setMealName] = useState("");
   const [calories, setCalories] = useState("");
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
-
-  const handleAddMeal = () => {
-    if (!mealName || !calories) return;
-
-    db.runAsync("INSERT INTO meals (name, calories) VALUES (?, ?)", [mealName, parseInt(calories, 10)])
-      .then(() => router.push("/(main)"))
-      .catch((err) => console.error("Erreur SQLite :", err));
-  };
+  const [searchQuery, setSearchQuery] = useState("");
 
   const searchFood = async (query: string) => {
-    const response = await fetch(
-      `https://api.edamam.com/api/food-database/v2/parser?app_id=YOUR_APP_ID&app_key=YOUR_APP_KEY&ingr=${query}`
-    );
-    const data = await response.json();
-    setSearchResults(data.hints || []);
+    if (query === "") return;
+
+    const appId = "6810951a"; // Ton App ID
+    const appKey = "47913954f8829bd8e2901a6eb2319745"; // Ta clé API
+
+    console.log(`Recherche de l'aliment: ${query}`); // Vérification du texte de recherche
+
+    try {
+      const response = await fetch(
+        `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${query}`
+      );
+      const data = await response.json();
+
+      console.log("Réponse de l'API Edamam:", data); // Vérification de la réponse de l'API
+
+      setSearchResults(data.hints || []); // Mettre à jour les résultats de la recherche
+    } catch (error) {
+      console.error("Erreur lors de la recherche d'aliments :", error);
+    }
+  };
+
+  const handleAddMeal = () => {
+    // Ajoute un repas dans la base de données
+    console.log("Repas ajouté :", mealName, calories);
+    router.push("/(main)"); // Rediriger vers la liste des repas après l'ajout
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ajouter un repas</Text>
 
+      {/* Champ pour le nom du repas */}
       <TextInput
         style={styles.input}
         placeholder="Nom du repas"
@@ -47,6 +58,7 @@ export default function AddMealScreen() {
         onChangeText={setMealName}
       />
 
+      {/* Champ pour les calories */}
       <TextInput
         style={styles.input}
         placeholder="Calories"
@@ -57,23 +69,33 @@ export default function AddMealScreen() {
 
       <Button title="Ajouter" onPress={handleAddMeal} />
 
+      {/* Barre de recherche d'aliments */}
       <TextInput
         style={styles.input}
         placeholder="Rechercher un aliment..."
-        onChangeText={searchFood}
+        value={searchQuery}
+        onChangeText={(text) => {
+          setSearchQuery(text);
+          searchFood(text); // Rechercher l'aliment chaque fois que l'utilisateur tape quelque chose
+        }}
       />
 
+      {/* Afficher les résultats de la recherche */}
       <FlatList
         data={searchResults}
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
-          <Button
-            title={`${item.food.label} - ${item.food.nutrients.ENERC_KCAL} kcal`}
-            onPress={() => {
-              setMealName(item.food.label);
-              setCalories(item.food.nutrients.ENERC_KCAL.toString());
-            }}
-          />
+          <View style={styles.foodItem}>
+            <Text style={styles.foodName}>{item.food.label}</Text>
+            <Text>{item.food.nutrients.ENERC_KCAL} kcal</Text>
+            <Button
+              title="Sélectionner"
+              onPress={() => {
+                setMealName(item.food.label);
+                setCalories(item.food.nutrients.ENERC_KCAL.toString());
+              }}
+            />
+          </View>
         )}
       />
     </View>
@@ -90,4 +112,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
+  foodItem: {
+    padding: 10,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  foodName: { fontSize: 18, fontWeight: "500" },
 });

@@ -31,6 +31,19 @@ export default function MealDetails() {
     }
   }, [id]);
 
+  const deleteMeal = () => {
+    try {
+      // Suppression du repas de la base de données avec `runAsync`
+      db.runAsync("DELETE FROM meals WHERE id = ?", [id]);
+  
+      // Rediriger vers la liste après suppression
+      router.push("/(main)");
+    } catch (err) {
+      console.error("Erreur de suppression :", err); // Gestion des erreurs de suppression
+    }
+  };
+  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Détail du repas</Text>
@@ -43,6 +56,7 @@ export default function MealDetails() {
         <Text>Chargement...</Text>
       )}
       <Button title="Retour à la liste" onPress={() => router.push("/(main)")} />
+      <Button title="Supprimer le repas" onPress={deleteMeal} color="red" />
     </View>
   );
 }
