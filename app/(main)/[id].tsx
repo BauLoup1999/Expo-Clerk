@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SQLite from "expo-sqlite";
+import { PieChart } from "react-native-chart-kit";
 
-// Utilisation de openDatabaseSync pour SQLite
 const db = SQLite.openDatabaseSync("meals.db");
 
-// Type pour les repas
 type Meal = {
   name: string;
   calories: number;
@@ -16,31 +15,32 @@ type Meal = {
 };
 
 export default function MealDetails() {
-  const { id } = useLocalSearchParams<{ id: string }>(); // Récupérer l'ID du repas
-  const [mealName, setMealName] = useState<string | null>(null); // État pour le nom du repas
-  const [mealDetails, setMealDetails] = useState<Meal | null>(null); // Détails du repas
-  const router = useRouter(); // Pour naviguer dans l'application
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [mealName, setMealName] = useState<string | null>(null);
+  const [mealDetails, setMealDetails] = useState<Meal | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   useEffect(() => {
+    setLoading(true);
     try {
-      // Utilisation de getAllSync pour récupérer le repas par ID
       const results = db.getAllSync("SELECT name FROM meals WHERE id = ?", [id]) as Meal[];
 
       if (results.length > 0) {
-        setMealName(results[0].name); // Mettre à jour le nom du repas
-        fetchMealNutrition(results[0].name); // Récupérer les informations nutritionnelles
+        setMealName(results[0].name);
+        fetchMealNutrition(results[0].name);
+      } else {
+        setLoading(false);
       }
     } catch (err) {
-      console.error("Erreur SQLite :", err); // Gestion des erreurs SQLite
+      console.error("Erreur SQLite :", err);
+      setLoading(false);
     }
   }, [id]);
 
-  // Fonction pour récupérer les informations nutritionnelles de l'API Edamam
   const fetchMealNutrition = async (mealName: string) => {
-    const appId = "6810951a"; // Ton App ID
-    const appKey = "47913954f8829bd8e2901a6eb2319745"; // Ta clé API
-
-    console.log(`Recherche d'aliment: ${mealName}`); // Log du nom du repas pour débogage
+    const appId = "6810951a";
+    const appKey = "47913954f8829bd8e2901a6eb2319745";
 
     try {
       const response = await fetch(
@@ -48,12 +48,9 @@ export default function MealDetails() {
       );
       const data = await response.json();
 
-      console.log("Réponse de l'API Edamam:", data); // Afficher la réponse complète de l'API
-
       if (data.hints && data.hints[0] && data.hints[0].food.nutrients) {
         const nutrients = data.hints[0].food.nutrients;
 
-        // Mettre à jour les informations nutritionnelles
         setMealDetails({
           name: mealName,
           calories: nutrients.ENERC_KCAL,
@@ -62,31 +59,27 @@ export default function MealDetails() {
           carbohydrates: nutrients.CHOCDF,
         });
       } else {
-        console.log("Aucune donnée nutritionnelle trouvée");
+        setMealDetails(null);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Erreur lors de la récupération des informations nutritionnelles :", error);
+      setLoading(false);
     }
   };
 
-  // Fonction pour supprimer le repas
   const deleteMeal = () => {
     try {
-      // Suppression du repas de la base de données
       db.runAsync("DELETE FROM meals WHERE id = ?", [id]);
-      console.log("Repas supprimé avec succès");
-
-      // Rediriger vers la liste après suppression
       router.push("/(main)");
     } catch (err) {
-      console.error("Erreur de suppression :", err); // Gestion des erreurs de suppression
+      console.error("Erreur de suppression :", err);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Détail du repas</Text>
-      {/* Afficher le nom du repas */}
       {mealName ? (
         <>
           <Text style={styles.mealName}>{mealName}</Text>
@@ -95,22 +88,59 @@ export default function MealDetails() {
         <Text>Chargement...</Text>
       )}
 
-      {/* Afficher les informations nutritionnelles */}
       {mealDetails ? (
         <View style={styles.detailsContainer}>
           <Text style={styles.mealInfo}>Calories: {mealDetails.calories} kcal</Text>
           <Text style={styles.mealInfo}>Protéines: {mealDetails.protein} g</Text>
           <Text style={styles.mealInfo}>Graisses: {mealDetails.fat} g</Text>
           <Text style={styles.mealInfo}>Glucides: {mealDetails.carbohydrates} g</Text>
+
+          <PieChart
+            data={[
+              {
+                name: "Protéines",
+                population: mealDetails.protein || 0,
+                color: "green",
+                legendFontColor: "#000",
+                legendFontSize: 12,
+              },
+              {
+                name: "Graisses",
+                population: mealDetails.fat || 0,
+                color: "red",
+                legendFontColor: "#000",
+                legendFontSize: 12,
+              },
+              {
+                name: "Glucides",
+                population: mealDetails.carbohydrates || 0,
+                color: "orange",
+                legendFontColor: "#000",
+                legendFontSize: 12,
+              },
+            ]}
+            width={300}
+            height={200}
+            chartConfig={{
+              backgroundColor: "#e26a00",
+              backgroundGradientFrom: "#fb8c00",
+              backgroundGradientTo: "#ffa726",
+              decimalPlaces: 2,
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+            }}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+          />
         </View>
       ) : (
         <Text>Chargement des informations nutritionnelles...</Text>
       )}
 
-      {/* Bouton pour supprimer le repas */}
       <Button title="Supprimer ce repas" onPress={deleteMeal} color="red" />
-
-      {/* Bouton pour revenir à la liste des repas */}
       <Button title="Retour à la liste" onPress={() => router.push("/(main)")} />
     </View>
   );
