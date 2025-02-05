@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router"; // Important: Assurez-vous que c'est bien `useLocalSearchParams`
 
 export default function MealDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -24,7 +24,7 @@ export default function AddMealScreen() {
     if (!mealName || !calories) return;
 
     db.runAsync("INSERT INTO meals (name, calories) VALUES (?, ?)", [mealName, parseInt(calories, 10)])
-      .then(() => router.push("/main"))
+      .then(() => router.push("/(main)"))
       .catch((err) => console.error("Erreur SQLite :", err));
   };
 

@@ -10,7 +10,6 @@ type Meal = {
   calories: number;
 };
 
-// Correction : utiliser `openDatabaseSync`
 const db = SQLite.openDatabaseSync("meals.db");
 
 export default function MealsList() {
@@ -39,8 +38,8 @@ export default function MealsList() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.mealItem}
-            onPress={() => router.push(`/main/${item.id}`)}  // Utilisez ce format pour passer l'id dans la route dynamique.
-            >
+           onPress={() => router.push(`/main/${item.id}`)}  // Change this to match the folder structure.
+          >
             <Text style={styles.mealName}>{item.name}</Text>
             <Text style={styles.mealCalories}>{item.calories} kcal</Text>
           </TouchableOpacity>
