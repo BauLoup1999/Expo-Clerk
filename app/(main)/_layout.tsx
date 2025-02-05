@@ -11,7 +11,7 @@ export default function AuthRoutesLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ title: "Accueil" }} />
-      <Stack.Screen name="settings" options={{ title: "Paramètres" }} />
+      <Stack.Screen name="[id]" options={{ title: "Votre repas" }} />
     </Stack>
   );
 }

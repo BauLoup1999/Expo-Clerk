@@ -38,7 +38,7 @@ export default function MealsList() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.mealItem}
-           onPress={() => router.push(`/main/${item.id}`)}  // Change this to match the folder structure.
+            onPress={() => router.push(`/(main)/${item.id}`)}  // Change this to match the folder structure.
           >
             <Text style={styles.mealName}>{item.name}</Text>
             <Text style={styles.mealCalories}>{item.calories} kcal</Text>
@@ -48,6 +48,12 @@ export default function MealsList() {
       <Button
         title="Ajouter un repas"
         onPress={() => router.push("/(main)/add")}
+        color="#007AFF"
+      />
+      {/* Bouton pour accéder au profil */}
+      <Button
+        title="Accéder à mon profil"
+        onPress={() => router.push("/(main)/profile")}
         color="#007AFF"
       />
     </View>
