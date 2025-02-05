@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
+import * as SQLite from "expo-sqlite";
 
+// Type pour les aliments
 type FoodItem = {
   food: {
     label: string;
@@ -11,13 +13,16 @@ type FoodItem = {
   };
 };
 
+const db = SQLite.openDatabaseSync("meals.db"); // Assurez-vous que la base de données est correctement ouverte
+
 export default function AddMealScreen() {
   const router = useRouter();
-  const [mealName, setMealName] = useState("");
-  const [calories, setCalories] = useState("");
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [mealName, setMealName] = useState(""); // Nom du repas
+  const [calories, setCalories] = useState(""); // Calories du repas
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]); // Résultats de recherche d'aliments
+  const [searchQuery, setSearchQuery] = useState(""); // Recherche de l'aliment
 
+  // Fonction pour rechercher un aliment
   const searchFood = async (query: string) => {
     if (query === "") return;
 
@@ -40,10 +45,21 @@ export default function AddMealScreen() {
     }
   };
 
+  // Fonction pour ajouter un repas dans la base de données
   const handleAddMeal = () => {
-    // Ajoute un repas dans la base de données
-    console.log("Repas ajouté :", mealName, calories);
-    router.push("/(main)"); // Rediriger vers la liste des repas après l'ajout
+    if (!mealName || !calories) return;
+
+    try {
+      // Insertion du repas dans la base de données
+      db.runAsync("INSERT INTO meals (name, calories) VALUES (?, ?)", [mealName, parseInt(calories, 10)]);
+
+      console.log("Repas ajouté :", mealName, calories);
+
+      // Rediriger vers la liste des repas après l'ajout
+      router.push("/(main)");
+    } catch (err) {
+      console.error("Erreur lors de l'ajout du repas :", err);
+    }
   };
 
   return (
@@ -67,6 +83,7 @@ export default function AddMealScreen() {
         onChangeText={setCalories}
       />
 
+      {/* Bouton pour ajouter le repas */}
       <Button title="Ajouter" onPress={handleAddMeal} />
 
       {/* Barre de recherche d'aliments */}
