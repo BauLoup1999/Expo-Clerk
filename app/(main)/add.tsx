@@ -64,12 +64,14 @@ export default function AddMealScreen() {
     <LinearGradient colors={["#FF8C00", "#FF4500"]} style={styles.gradient}>
       <View style={styles.container}>
 
+        {/* Flèche de retour */}
         <TouchableOpacity style={styles.backButton} onPress={() => router.push("/(main)")}>
           <MaterialIcons name="arrow-back" size={28} color="white" />
         </TouchableOpacity>
 
         <Text style={styles.title}>🍽️ Ajouter un aliment</Text>
 
+        {/* Champ pour nom du repas */}
         <TextInput
           style={styles.input}
           placeholder="Nom du repas"
@@ -78,10 +80,12 @@ export default function AddMealScreen() {
           onChangeText={setMealName}
         />
 
+        {/* Bouton Ajouter */}
         <TouchableOpacity style={styles.addButton} onPress={handleAddMeal}>
           <Text style={styles.addButtonText}>✅ Ajouter l'aliment</Text>
         </TouchableOpacity>
 
+        {/* Champ pour rechercher un aliment */}
         <TextInput
           style={styles.input}
           placeholder="Rechercher un aliment..."
@@ -93,8 +97,16 @@ export default function AddMealScreen() {
           }}
         />
 
+        {/* Bouton Scanner un QR Code */}
+        <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
+          <MaterialIcons name="qr-code-scanner" size={28} color="white" />
+          <Text style={styles.cameraButtonText}>📸 Scanner un QR Code</Text>
+        </TouchableOpacity>
+
+        {/* Loader */}
         {loading && <ActivityIndicator size="large" color="white" />}
 
+        {/* Résultats de recherche */}
         <FlatList
           data={searchResults}
           keyExtractor={(_, index) => index.toString()}
@@ -113,12 +125,6 @@ export default function AddMealScreen() {
             </TouchableOpacity>
           )}
         />
-
-        <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
-          <MaterialIcons name="qr-code-scanner" size={28} color="white" />
-          <Text style={styles.cameraButtonText}>📸 Scanner un QR Code</Text>
-        </TouchableOpacity>
-
       </View>
     </LinearGradient>
   );
@@ -135,6 +141,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     width: "100%",
+    paddingTop: 40, // Ajout d'un padding pour éviter le chevauchement avec la flèche
   },
   title: {
     fontSize: 28,
@@ -187,7 +194,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 20,
+    marginBottom: 20, // Ajout d'une marge pour espacer correctement
   },
   cameraButtonText: {
     fontSize: 16,
@@ -197,8 +204,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    top: 50,
+    top: 10, // Augmenté pour éviter le chevauchement
     left: 20,
   },
 });
-
