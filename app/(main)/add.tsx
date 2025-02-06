@@ -56,6 +56,10 @@ export default function AddMealScreen() {
     }
   };
 
+  const handleOpenCamera = () => {
+    router.push("/(main)/camera"); 
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ajouter un repas</Text>
@@ -98,6 +102,7 @@ export default function AddMealScreen() {
           </View>
         )}
       />
+      <Button title="Scanner un QR Code" onPress={handleOpenCamera} />
     </View>
   );
 }
