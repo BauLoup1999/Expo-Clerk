@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   Image,
+  Text,
   Button,
 } from "react-native";
 import {
@@ -21,12 +22,13 @@ import { Video } from "expo-av";
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-
   const [facing, setFacing] = useState<CameraType>("back");
   const camera = useRef<CameraView>(null);
   const [picture, setPicture] = useState<CameraCapturedPicture>();
   const [isRecording, setIsRecording] = useState(false);
   const [video, setVideo] = useState<string>();
+  const [scanned, setScanned] = useState(false);
+  const [barcodeData, setBarcodeData] = useState<string>("");
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -36,6 +38,12 @@ export default function CameraScreen() {
 
   const toggleCameraFacing = () => {
     setFacing((current) => (current === "back" ? "front" : "back"));
+  };
+
+  const handleBarCodeScanned = (scanResult: { type: string, data: string }) => {
+    console.log("Code-barres scanné:", scanResult.data); 
+    setScanned(true);
+    setBarcodeData(scanResult.data); // Stocke l'info scannée
   };
 
   const onPress = () => {
@@ -124,17 +132,18 @@ export default function CameraScreen() {
     <View>
       <CameraView
         ref={camera}
-        mode="video"
+        mode="video" 
         style={styles.camera}
         facing={facing}
+        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        barcodeScannerSettings={{
+            barcodeTypes: ["qr", "ean13", "ean8", "code128", "pdf417", "itf14"], // Ajout d'autres types de code-barres
+          }}
       >
         <View style={styles.footer}>
           <View />
           <Pressable
-            style={[
-              styles.recordButton,
-              { backgroundColor: isRecording ? "crimson" : "white" },
-            ]}
+            style={[styles.recordButton, { backgroundColor: isRecording ? "crimson" : "white" }]}
             onPress={onPress}
             onLongPress={startRecording}
           />
@@ -154,6 +163,8 @@ export default function CameraScreen() {
         size={30}
         onPress={() => router.back()}
       />
+
+      {scanned && <Text style={{ color: "white", padding: 20 }}>QR Code Data: {barcodeData}</Text>}
     </View>
   );
 }
