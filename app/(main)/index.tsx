@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Button, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  Button, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Image, 
+  StatusBar 
+} from "react-native";
 import { useRouter } from "expo-router";
 import * as SQLite from "expo-sqlite";
+import { LinearGradient } from "expo-linear-gradient"; // Dégradé pour le fond
+import { MaterialIcons } from "@expo/vector-icons"; // Icônes modernes
 
 type Meal = {
   id: number;
   name: string;
   calories: number;
-  imageUrl?: string; // Ajout d'un champ optionnel pour l'image
+  imageUrl?: string;
 };
 
 const db = SQLite.openDatabaseSync("meals.db");
@@ -15,7 +26,7 @@ const db = SQLite.openDatabaseSync("meals.db");
 export default function MealsList() {
   const router = useRouter();
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [mealImages, setMealImages] = useState<{ [key: string]: string }>({}); // Stocke les images des aliments
+  const [mealImages, setMealImages] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     db.execAsync("CREATE TABLE IF NOT EXISTS meals (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, calories INTEGER);");
@@ -26,15 +37,14 @@ export default function MealsList() {
     db.getAllAsync<Meal>("SELECT * FROM meals;")
       .then((results) => {
         setMeals(results);
-        fetchMealImages(results); // Récupère les images des aliments
+        fetchMealImages(results);
       })
       .catch((err) => console.error("Erreur SQLite :", err));
   };
 
-  // 🔹 Récupère les images des aliments via l'API Edamam
   const fetchMealImages = async (meals: Meal[]) => {
-    const appId = "6810951a"; // Ton App ID
-    const appKey = "47913954f8829bd8e2901a6eb2319745"; // Ta clé API
+    const appId = "b0fd2c53"; 
+    const appKey = "269a60ce79a71c30db4bfddb94994903"; 
 
     let newMealImages: { [key: string]: string } = {};
 
@@ -52,7 +62,7 @@ export default function MealsList() {
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération de l'image :", error);
+        console.error("Erreur récupération image :", error);
       }
     }
 
@@ -62,17 +72,22 @@ export default function MealsList() {
   const totalCalories = meals.reduce((total, meal) => total + meal.calories, 0);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Votre repas</Text>
+    <LinearGradient colors={["#FF8C00", "#FF4500"]} style={styles.gradient}>
+      <StatusBar barStyle="light-content" />
+      
+      <View style={styles.header}>
+        <Text style={styles.title}>🍽️ Votre Repas</Text>
+      </View>
+
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <TouchableOpacity 
             style={styles.mealItem}
+            activeOpacity={0.7}
             onPress={() => router.push(`/(main)/${item.id}`)}
           >
-            {/* 🔹 Ajout de l'image */}
             {mealImages[item.name] ? (
               <Image source={{ uri: mealImages[item.name] }} style={styles.mealImage} />
             ) : (
@@ -85,37 +100,93 @@ export default function MealsList() {
           </TouchableOpacity>
         )}
       />
-      <Text style={styles.totalCalories}>Total des calories : {totalCalories} kcal</Text>
-      <Button title="Ajouter un aliment" onPress={() => router.push("/(main)/add")} color="#007AFF" />
-      <Button title="Accéder à mon profil" onPress={() => router.push("/(main)/profile")} color="#007AFF" />
-    </View>
+
+      <Text style={styles.totalCalories}>🔥 Total Calories : {totalCalories} kcal</Text>
+
+      <View style={styles.navBar}>
+        <TouchableOpacity onPress={() => router.push("/(main)/add")}>
+          <MaterialIcons name="add-circle" size={32} color="white" />
+          <Text style={styles.navText}>Ajouter</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/(main)/profile")}>
+          <MaterialIcons name="person" size={32} color="white" />
+          <Text style={styles.navText}>Profil</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 16 },
+  gradient: {
+    flex: 1,
+    paddingTop: 40,
+    paddingHorizontal: 16,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: "700", 
+    color: "white" 
+  },
   mealItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 10,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   mealImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
   },
   imagePlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
     backgroundColor: "#ddd",
   },
-  mealName: { fontSize: 18 },
-  mealCalories: { fontSize: 16, color: "#888" },
-  totalCalories: { fontSize: 18, fontWeight: "700", marginTop: 20, textAlign: "right" },
+  mealName: { 
+    fontSize: 18, 
+    fontWeight: "bold", 
+    color: "white" 
+  },
+  mealCalories: { 
+    fontSize: 16, 
+    color: "#FFD700" 
+  },
+  totalCalories: { 
+    fontSize: 18, 
+    fontWeight: "700", 
+    textAlign: "center",
+    color: "white",
+    marginTop: 20,
+  },
+  navBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: "#FF4500",
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  navText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 5,
+  },
 });

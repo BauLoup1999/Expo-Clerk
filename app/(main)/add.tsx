@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, FlatList } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import * as SQLite from "expo-sqlite";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialIcons } from "@expo/vector-icons";
 
-// Type pour les aliments
 type FoodItem = {
   food: {
     label: string;
@@ -13,30 +14,33 @@ type FoodItem = {
   };
 };
 
-const db = SQLite.openDatabaseSync("meals.db"); // Assurez-vous que la base de données est correctement ouverte
+const db = SQLite.openDatabaseSync("meals.db");
 
 export default function AddMealScreen() {
   const router = useRouter();
-  const [mealName, setMealName] = useState(""); // Nom du repas
-  const [calories, setCalories] = useState(""); // Calories du repas
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([]); // Résultats de recherche d'aliments
-  const [searchQuery, setSearchQuery] = useState(""); // Recherche de l'aliment
+  const [mealName, setMealName] = useState(""); 
+  const [calories, setCalories] = useState(""); 
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]); 
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [loading, setLoading] = useState(false);
 
-  // Fonction pour rechercher un aliment
   const searchFood = async (query: string) => {
     if (query === "") return;
 
-    const appId = "6810951a"; // Ton App ID
-    const appKey = "47913954f8829bd8e2901a6eb2319745"; // Ta clé API
+    const appId = "b0fd2c53";
+    const appKey = "269a60ce79a71c30db4bfddb94994903";
 
+    setLoading(true);
     try {
       const response = await fetch(
         `https://api.edamam.com/api/food-database/v2/parser?app_id=${appId}&app_key=${appKey}&ingr=${query}`
       );
       const data = await response.json();
-      setSearchResults(data.hints || []); // Mettre à jour les résultats de la recherche
+      setSearchResults(data.hints || []);
     } catch (error) {
-      console.error("Erreur lors de la recherche d'aliments :", error);
+      console.error("Erreur lors de la recherche :", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,10 +49,7 @@ export default function AddMealScreen() {
 
     try {
       db.runAsync("INSERT INTO meals (name, calories) VALUES (?, ?)", [mealName, parseInt(calories, 10)]);
-
       console.log("Repas ajouté :", mealName, calories);
-
-      // Rediriger vers la liste des repas après l'ajout
       router.push("/(main)");
     } catch (err) {
       console.error("Erreur lors de l'ajout du repas :", err);
@@ -60,56 +61,144 @@ export default function AddMealScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}></Text>
+    <LinearGradient colors={["#FF8C00", "#FF4500"]} style={styles.gradient}>
+      <View style={styles.container}>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nom du repas"
-        value={mealName}
-        onChangeText={setMealName}
-      />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push("/(main)")}>
+          <MaterialIcons name="arrow-back" size={28} color="white" />
+        </TouchableOpacity>
 
-      <Button title="Ajouter l'aliment" onPress={handleAddMeal} />
+        <Text style={styles.title}>🍽️ Ajouter un aliment</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Rechercher un aliment..."
-        value={searchQuery}
-        onChangeText={(text) => {
-          setSearchQuery(text);
-          searchFood(text); // Rechercher l'aliment chaque fois que l'utilisateur tape quelque chose
-        }}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Nom du repas"
+          placeholderTextColor="#ddd"
+          value={mealName}
+          onChangeText={setMealName}
+        />
 
-      <FlatList
-        data={searchResults}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.foodItem}>
-            <Text style={styles.foodName}>{item.food.label}</Text>
-            <Text>{item.food.nutrients.ENERC_KCAL} kcal</Text>
-            <Button
-              title="Sélectionner"
+        <TouchableOpacity style={styles.addButton} onPress={handleAddMeal}>
+          <Text style={styles.addButtonText}>✅ Ajouter l'aliment</Text>
+        </TouchableOpacity>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Rechercher un aliment..."
+          placeholderTextColor="#ddd"
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            searchFood(text);
+          }}
+        />
+
+        {loading && <ActivityIndicator size="large" color="white" />}
+
+        <FlatList
+          data={searchResults}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.foodItem}
               onPress={() => {
-                setMealName(item.food.label); // Sélectionner le nom de l'aliment
-                setCalories(item.food.nutrients.ENERC_KCAL.toString()); // Sélectionner les calories de l'aliment
-                setSearchResults([]); // Masquer la liste des résultats de la recherche
-                setSearchQuery(""); // Réinitialiser la barre de recherche
+                setMealName(item.food.label);
+                setCalories(item.food.nutrients.ENERC_KCAL.toString());
+                setSearchResults([]);
+                setSearchQuery("");
               }}
-            />
-          </View>
-        )}
-      />
-      <Button title="Scanner un QR Code" onPress={handleOpenCamera} />
-    </View>
+            >
+              <Text style={styles.foodName}>{item.food.label}</Text>
+              <Text style={styles.caloriesText}>{item.food.nutrients.ENERC_KCAL} kcal</Text>
+            </TouchableOpacity>
+          )}
+        />
+
+        <TouchableOpacity style={styles.cameraButton} onPress={handleOpenCamera}>
+          <MaterialIcons name="qr-code-scanner" size={28} color="white" />
+          <Text style={styles.cameraButtonText}>📸 Scanner un QR Code</Text>
+        </TouchableOpacity>
+
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 16 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 5 },
-  foodItem: { padding: 10, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: "#ddd" },
-  foodName: { fontSize: 18, fontWeight: "500" },
+  gradient: {
+    flex: 1,
+    paddingTop: 40,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    width: "100%",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "white",
+    marginBottom: 20,
+  },
+  input: {
+    width: "90%",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    color: "white",
+    marginBottom: 15,
+  },
+  addButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+  },
+  foodItem: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    padding: 12,
+    borderRadius: 8,
+    width: "90%",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  foodName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+  },
+  caloriesText: {
+    fontSize: 16,
+    color: "#FFD700",
+  },
+  cameraButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF4500",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  cameraButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: 8,
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+  },
 });
+

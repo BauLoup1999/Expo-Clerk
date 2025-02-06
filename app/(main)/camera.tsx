@@ -48,10 +48,10 @@ export default function CameraScreen() {
   const handleBarCodeScanned = async (scanResult: { type: string, data: string }) => {
     console.log("Code-barres scanné:", scanResult.data);
     setScanned(true);
-    setBarcodeData(scanResult.data); // Stocke l'info scannée
+    setBarcodeData(scanResult.data); 
   
-    const appId = "6810951a"; // Ton App ID
-    const appKey = "47913954f8829bd8e2901a6eb2319745"; // Ta clé API
+    const appId = "b0fd2c53"; 
+    const appKey = "269a60ce79a71c30db4bfddb94994903"; 
   
     try {
       const response = await fetch(
@@ -60,26 +60,21 @@ export default function CameraScreen() {
       const data = await response.json();
       console.log("Données de l'aliment:", data);
   
-      // Si un aliment est trouvé, insérer directement dans la base de données
       if (data.hints && data.hints.length > 0) {
         const food = data.hints[0].food;
         const mealName = food.label;
         const calories = food.nutrients.ENERC_KCAL || 0;
   
-        // Vérifier si le repas existe déjà dans la base de données
         const query = "SELECT * FROM meals WHERE name = ?";
         const result = await db.getAllAsync(query, [mealName]);
   
-        // Si le repas existe déjà, ne pas insérer et afficher un message
         if (result.length > 0) {
           console.log("Le repas existe déjà:", mealName);
         } else {
-          // Si le repas n'existe pas, on l'ajoute à la base de données
           db.runAsync("INSERT INTO meals (name, calories) VALUES (?, ?)", [mealName, parseInt(calories.toString(), 10)]);
           console.log("Repas ajouté :", mealName, calories);
         }
   
-        // Rediriger vers la page des repas après l'ajout ou si le repas existe déjà
         router.push("/(main)");
       }
     } catch (error) {
@@ -112,9 +107,8 @@ export default function CameraScreen() {
   const saveFile = async (uri?: string) => {
     if (!uri) return;
 
-    const filename = uri.split("/").pop(); // Récupère le nom du fichier
+    const filename = uri.split("/").pop(); 
 
-    // Vérifier que documentDirectory est disponible
     if (FileSystem.documentDirectory && filename) {
       const newUri = FileSystem.documentDirectory + filename;
 
@@ -125,7 +119,7 @@ export default function CameraScreen() {
 
       setPicture(undefined);
       setVideo(undefined);
-      router.back(); // Retour à l'écran précédent après l'enregistrement
+      router.back(); 
     } else {
       console.error("Erreur : Le répertoire n'est pas disponible ou filename est undefined.");
     }
@@ -174,7 +168,7 @@ export default function CameraScreen() {
     <View>
       <CameraView
         ref={camera}
-        mode="video" // Vous pouvez changer en "photo" si vous souhaitez uniquement capturer des photos
+        mode="video" 
         style={styles.camera}
         facing={facing}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
