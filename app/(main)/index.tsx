@@ -31,7 +31,7 @@ export default function MealsList() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Vos repas</Text>
+      <Text style={styles.title}>Votre repas</Text>
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id.toString()}
