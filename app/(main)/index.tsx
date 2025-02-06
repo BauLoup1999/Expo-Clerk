@@ -29,6 +29,9 @@ export default function MealsList() {
       .catch((err) => console.error("Erreur SQLite :", err));
   };
 
+  // Fonction pour calculer le total des calories
+  const totalCalories = meals.reduce((total, meal) => total + meal.calories, 0);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Votre repas</Text>
@@ -45,12 +48,12 @@ export default function MealsList() {
           </TouchableOpacity>
         )}
       />
+      <Text style={styles.totalCalories}>Total des calories : {totalCalories} kcal</Text>
       <Button
-        title="Ajouter un repas"
+        title="Ajouter un aliment"
         onPress={() => router.push("/(main)/add")}
         color="#007AFF"
       />
-      {/* Bouton pour accéder au profil */}
       <Button
         title="Accéder à mon profil"
         onPress={() => router.push("/(main)/profile")}
@@ -72,4 +75,5 @@ const styles = StyleSheet.create({
   },
   mealName: { fontSize: 18 },
   mealCalories: { fontSize: 16, color: "#888" },
+  totalCalories: { fontSize: 18, fontWeight: "700", marginTop: 20, textAlign: "right" },
 });

@@ -40,7 +40,6 @@ export default function AddMealScreen() {
     }
   };
 
-  // Fonction pour ajouter un repas dans la base de données
   const handleAddMeal = () => {
     if (!mealName || !calories) return;
 
@@ -62,7 +61,7 @@ export default function AddMealScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ajouter un repas</Text>
+      <Text style={styles.title}></Text>
 
       <TextInput
         style={styles.input}
@@ -71,7 +70,7 @@ export default function AddMealScreen() {
         onChangeText={setMealName}
       />
 
-      <Button title="Ajouter le repas" onPress={handleAddMeal} />
+      <Button title="Ajouter l'aliment" onPress={handleAddMeal} />
 
       <TextInput
         style={styles.input}
